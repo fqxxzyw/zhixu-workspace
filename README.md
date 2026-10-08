@@ -2,9 +2,9 @@
 
 面向计算机学习的协作知识工作台，把笔记、代码、公式、图片、HTML 实验与 AI 整理放在同一个知识页面中。
 
-[在线网站](https://zhixu-learning.fqxxzyw.chatgpt.site) · [功能与架构](docs/architecture.md) · [开发与部署](docs/deployment.md) · [Windows 桌面版规划](docs/desktop-roadmap.md)
+[在线网站](https://zhixu-learning.fqxxzyw.chatgpt.site) · [功能与架构](docs/architecture.md) · [开发与部署](docs/deployment.md) · [Windows 桌面版](docs/desktop.md)
 
-## 当前版本：Web MVP
+## 当前版本：Web MVP 与 Windows 桌面预览版
 
 - 新用户从空知识库开始，首次登录有可跳过、可继续的使用引导。
 - 知识空间、用户自定义学科、嵌套目录、标签、相关知识链接和全文搜索。
@@ -22,9 +22,9 @@
 - 自定义 OpenAI 兼容 AI API：多模型、默认模型、加密保存密钥；总结、解释、问答、卡片和思维导图生成。AI 结果先成为草稿，确认后才写入笔记。
 - 桌面优先、平板和手机布局，深色模式与减少动态效果。
 
-## Web 与后续桌面版的区别
+## Web 与桌面版的区别
 
-| 能力 | 当前 Web 版本 | 后续 Windows 桌面版（规划） |
+| 能力 | 当前 Web 版本 | Windows 桌面预览版 |
 | --- | --- | --- |
 | 登录 | Sites 的 ChatGPT 身份与空间权限 | 本地账户密码、本地会话 |
 | 存储 | Cloudflare D1 / R2 | 本地 SQLite、应用资源目录 |
@@ -32,13 +32,13 @@
 | 分类 | 数据库目录与标签 | 虚拟目录、学科和标签，与磁盘位置独立 |
 | 安装 | 浏览器访问 | Windows 安装器 EXE |
 
-**仓库目前是 Web 源码，没有已完成的 EXE、离线账户系统或本地文件索引器。** 桌面版将复用编辑、学习和 AI 交互，并替换身份、存储与文件访问层；详见 [桌面版规划](docs/desktop-roadmap.md)。
+桌面实现位于 `desktop/`，Windows Actions 验证后发布安装包。使用与构建说明见 [桌面版文档](docs/desktop.md)。
 
 ## 使用边界
 
 Python / Java / C++ 代码目前不在网站内执行；请在本地环境运行后记录输出。HTML 实验可在隔离 iframe 内运行，不访问主页面、账号存储和外部接口。Notebook 导入既有输出，不启动 Python 内核。
 
-AI 使用自己的 API 和余额，没有内置密钥。本地模型在当前托管版本中需要可访问的 HTTPS 兼容网关；托管服务不能访问用户电脑的 localhost。桌面版的本地模型连接另行适配。
+AI 使用自己的 API 和余额，没有内置密钥。本地模型在当前托管版本中需要可访问的 HTTPS 兼容网关；托管服务不能访问用户电脑的 localhost。桌面版可直接连接本机 HTTP 的 OpenAI 兼容模型接口。
 
 Web 单文件上传上限为 12 MB，每批最多 100 个文件、50 MB。可编辑正文有大小和单元格数量限制；超出转换范围的文件保留原始附件。PDF / Word / PPT 等保留原文件，不等同于 OCR 或全文提取。
 

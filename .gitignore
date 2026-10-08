@@ -47,3 +47,7 @@ next-env.d.ts
 .dev.vars*
 *.tsbuildinfo
 !.env.example
+/desktop/node_modules/
+/desktop/out/
+/desktop/release/
+/desktop/.test-data/

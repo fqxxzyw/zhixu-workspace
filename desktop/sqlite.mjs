@@ -1,0 +1,13 @@
+import {DatabaseSync} from 'node:sqlite';
+import {readFileSync,readdirSync,mkdirSync} from 'node:fs';
+import path from 'node:path';
+export function createDatabase(file,migrations){mkdirSync(path.dirname(file),{recursive:true});const sqlite=new DatabaseSync(file);sqlite.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000; CREATE TABLE IF NOT EXISTS local_migrations(name TEXT PRIMARY KEY)');
+ for(const name of readdirSync(migrations).filter(x=>x.endsWith('.sql')).sort()){if(sqlite.prepare('SELECT name FROM local_migrations WHERE name=?').get(name))continue;sqlite.exec('BEGIN IMMEDIATE');try{sqlite.exec(readFileSync(path.join(migrations,name),'utf8'));sqlite.prepare('INSERT INTO local_migrations(name) VALUES(?)').run(name);sqlite.exec('COMMIT')}catch(e){sqlite.exec('ROLLBACK');throw e}}
+ sqlite.exec(`CREATE TABLE IF NOT EXISTS local_accounts(user_id TEXT PRIMARY KEY REFERENCES users(id),username TEXT UNIQUE NOT NULL,salt TEXT NOT NULL,password_hash TEXT NOT NULL);
+ CREATE TABLE IF NOT EXISTS local_sessions(token_hash TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),expires_at INTEGER NOT NULL);
+ CREATE TABLE IF NOT EXISTS indexed_roots(id TEXT PRIMARY KEY,user_id TEXT NOT NULL REFERENCES users(id),space_id TEXT NOT NULL REFERENCES spaces(id),path TEXT NOT NULL,name TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'idle',message TEXT NOT NULL DEFAULT '',scanned_count INTEGER NOT NULL DEFAULT 0,last_scan TEXT,UNIQUE(user_id,space_id,path));
+ CREATE TABLE IF NOT EXISTS indexed_files(id TEXT PRIMARY KEY,root_id TEXT NOT NULL REFERENCES indexed_roots(id),relative_path TEXT NOT NULL,name TEXT NOT NULL,file_type TEXT NOT NULL,size INTEGER NOT NULL,mtime REAL NOT NULL,status TEXT NOT NULL,seen_scan TEXT NOT NULL,subject TEXT NOT NULL DEFAULT '',tags TEXT NOT NULL DEFAULT '[]',virtual_folder TEXT NOT NULL DEFAULT '',note_id TEXT REFERENCES pages(id),UNIQUE(root_id,relative_path));
+ CREATE INDEX IF NOT EXISTS indexed_files_root ON indexed_files(root_id,status);`);
+ const prepare=sql=>{const statement=sqlite.prepare(sql);let args=[];const wrapped={bind(...values){args=values.map(x=>x===undefined?null:x);return wrapped},async first(){return statement.get(...args)||null},async all(){return {results:statement.all(...args)}},async run(){const r=statement.run(...args);return {meta:{changes:Number(r.changes),last_row_id:Number(r.lastInsertRowid)}}},_run(){const r=statement.run(...args);return {meta:{changes:Number(r.changes)}}}};return wrapped};
+ return {sqlite,prepare,async batch(statements){sqlite.exec('BEGIN IMMEDIATE');try{const results=statements.map(s=>s._run());sqlite.exec('COMMIT');return results}catch(e){sqlite.exec('ROLLBACK');throw e}},close(){sqlite.close()}}
+}
