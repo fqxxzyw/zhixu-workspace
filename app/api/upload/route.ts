@@ -1,0 +1,3 @@
+import {identity,access,Fault} from '@/lib/server';
+import {storeUpload} from '@/lib/uploads';
+export async function POST(req:Request){try{const origin=req.headers.get('origin');if(origin&&origin!==new URL(req.url).origin)throw new Fault('请求来源不正确',403);const u=await identity(),form=await req.formData(),space=String(form.get('space')||'');await access(space,u.userId,true);const f=form.get('file');if(!(f instanceof File))throw new Fault('请选择文件');const {key,...asset}=await storeUpload(f,space,u.userId,form.get('originalId')?String(form.get('originalId')):null);return Response.json(asset)}catch(e:any){console.error('upload failure',e);return Response.json({error:e instanceof Fault?e.message:'上传失败，请重试'},{status:e.status||500})}}
