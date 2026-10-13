@@ -1,6 +1,6 @@
 'use client';
 import {useEffect,useRef,useState} from 'react';
-import {RotateCw,Undo2,ZoomIn,ZoomOut} from 'lucide-react';
+import {RotateCw,Undo2,ZoomIn,ZoomOut} from '@/components/fluent-icons';
 import {Modal,Choice,Btn} from './ui';
 import {toast} from 'sonner';
 const tools=['自由画笔','箭头','矩形','圆形','文本','高亮','马赛克','序号','裁剪'];

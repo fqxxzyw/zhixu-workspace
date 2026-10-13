@@ -1,7 +1,7 @@
 'use client';
 import {useState} from 'react';
 import {AutoTextarea} from './auto-textarea';
-import {Copy,Maximize,Sparkles,Upload,PenLine,Play,GitCompare,WrapText} from 'lucide-react';
+import {Copy,Maximize,Sparkles,Upload,PenLine,Play,GitCompare,WrapText} from '@/components/fluent-icons';
 import {Tabs,TabsList,TabsTrigger,TabsContent} from '@/components/ui/tabs';
 import {Checkbox} from '@/components/ui/checkbox';
 import {Table,TableBody,TableRow,TableCell} from '@/components/ui/table';

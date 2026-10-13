@@ -26,7 +26,7 @@ import {
   Upload,
   Plus,
   Settings,
-} from "lucide-react";
+} from "@/components/fluent-icons";
 import { Choice } from "./ui";
 import { fileGroups, inferPageGroup } from "@/lib/files";
 export function KnowledgeSidebar({
@@ -159,7 +159,8 @@ export function KnowledgeSidebar({
             <button
               key={key}
               title={label}
-              className={view === key ? "active" : ""}
+              aria-current={view === key || key === "library" && view === "page" ? "page" : undefined}
+              className={view === key || key === "library" && view === "page" ? "active" : ""}
               onClick={() => onView(key)}
             >
               <Icon size={18} />

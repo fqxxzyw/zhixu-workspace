@@ -1,5 +1,5 @@
 'use client';
-import {BookOpen,Folder,Upload,Sparkles,Clock} from 'lucide-react';
+import {BookOpen,Folder,Upload,Sparkles,Clock} from '@/components/fluent-icons';
 import {Btn,Modal} from './ui';
 import {Progress} from '@/components/ui/progress';
 const steps=[

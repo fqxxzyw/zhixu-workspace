@@ -1,6 +1,6 @@
 "use client";
 import { useRef, useState } from "react";
-import { FolderUp, Upload, Check, AlertCircle, Loader2 } from "lucide-react";
+import { FolderUp, Upload, Check, AlertCircle, Loader2 } from "@/components/fluent-icons";
 import { Modal, Btn, Choice } from "./ui";
 import { Progress } from "@/components/ui/progress";
 import { classifyFile, fileGroups } from "@/lib/files";

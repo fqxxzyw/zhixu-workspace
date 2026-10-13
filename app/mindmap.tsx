@@ -9,7 +9,7 @@ import {
   Redo2,
   CornerDownRight,
   ChevronDown,
-} from "lucide-react";
+} from "@/components/fluent-icons";
 import { Btn, Choice } from "./ui";
 import {
   MapNode,

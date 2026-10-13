@@ -1,14 +1,23 @@
-const {app,BrowserWindow,ipcMain,dialog,shell,safeStorage}=require('electron');
+const {app,BrowserWindow,ipcMain,dialog,shell,safeStorage,nativeTheme,systemPreferences}=require('electron');
+const os=require('node:os');
 const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('node:crypto');
 app.setName('知序');
 let service,window,closing=false;
+const windows=process.platform==='win32',mica=windows&&Number(os.release().split('.')[2])>=22621;
+function appearance(){return {accent:windows?systemPreferences.getAccentColor().slice(0,6):null,material:mica,titlebar:windows}}
+function updateAppearance(){if(!window||window.isDestroyed())return;const dark=nativeTheme.shouldUseDarkColors;window.setBackgroundColor(mica?'#00000000':dark?'#202020':'#f3f3f3');if(windows)window.setTitleBarOverlay({color:dark?'#202020':'#f3f3f3',symbolColor:dark?'#f5f5f5':'#1a1a1a',height:40});window.webContents.send('zhixu:appearance-changed',appearance())}
+nativeTheme.on('updated',updateAppearance);
+if(windows)systemPreferences.on('accent-color-changed',updateAppearance);
 const smoke=process.argv.includes('--smoke-test'),smokeArg=process.argv.find(x=>x.startsWith('--smoke-dir='));
 if(smokeArg)app.setPath('userData',smokeArg.slice('--smoke-dir='.length));
 if(!app.requestSingleInstanceLock())app.quit();else app.on('second-instance',()=>{window?.show();window?.focus()});
 async function secret(dataDir){const location=path.join(dataDir,'secret.enc');await fs.mkdir(dataDir,{recursive:true});if(!safeStorage.isEncryptionAvailable())throw new Error('系统凭据加密不可用，无法保存本地 AI 密钥。');try{return safeStorage.decryptString(await fs.readFile(location))}catch(e){if(e.code!=='ENOENT')throw e;const key=crypto.randomBytes(32).toString('base64url');await fs.writeFile(location,safeStorage.encryptString(key),{mode:0o600});return key}}
 function trusted(event){if(event.sender!==window?.webContents||!event.senderFrame?.url.startsWith(service.origin+'/'))throw new Error('不允许的桌面调用')}
 app.whenReady().then(async()=>{try{const {startService}=await import('./out/service.mjs');const dataDir=app.getPath('userData');service=await startService({dataDir,secret:await secret(dataDir),migrations:path.join(__dirname,'out/migrations'),renderer:path.join(__dirname,'out/renderer')});
- window=new BrowserWindow({title:'知序 · 本地学习工作台',width:1380,height:900,minWidth:760,minHeight:600,show:!smoke,backgroundColor:'#f8fafc',autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
+ window=new BrowserWindow({title:'知序 · 本地学习工作台',width:1380,height:900,minWidth:760,minHeight:600,show:!smoke,backgroundColor:nativeTheme.shouldUseDarkColors?'#202020':'#f3f3f3',...(windows?{titleBarStyle:'hidden',titleBarOverlay:{color:nativeTheme.shouldUseDarkColors?'#202020':'#f3f3f3',symbolColor:nativeTheme.shouldUseDarkColors?'#f5f5f5':'#1a1a1a',height:40}}:{}),...(mica?{backgroundMaterial:'mica'}:{}),autoHideMenuBar:true,webPreferences:{preload:path.join(__dirname,'preload.cjs'),nodeIntegration:false,contextIsolation:true,sandbox:true}});
+ updateAppearance();
+ ipcMain.handle('zhixu:get-appearance',event=>{trusted(event);return appearance()});
+ ipcMain.handle('zhixu:set-theme',(event,theme)=>{trusted(event);if(!['system','light','dark'].includes(theme))throw new Error('主题不正确');if(nativeTheme.themeSource!==theme){nativeTheme.themeSource=theme;updateAppearance()}});
  window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',(event,url)=>{if(!url.startsWith(service.origin+'/'))event.preventDefault()});window.webContents.session.setPermissionRequestHandler((_wc,_permission,callback)=>callback(false));
  ipcMain.handle('zhixu:choose-directory',async event=>{trusted(event);const selected=await dialog.showOpenDialog(window,{title:'选择要建立索引的目录（不会移动文件）',properties:['openDirectory']});return selected.canceled?null:{grant:service.indexer.grantRootPath(selected.filePaths[0]),path:selected.filePaths[0]}});
  ipcMain.handle('zhixu:show-file',async(event,id)=>{trusted(event);if(typeof id!=='string'||id.length>100)throw new Error('文件 ID 不正确');const cookies=await window.webContents.session.cookies.get({url:service.origin});const cookie=cookies.map(c=>c.name+'='+c.value).join('; ');const location=await service.fileLocation(id,cookie);shell.showItemInFolder(location);return true});

@@ -14,10 +14,12 @@
     "db:generate": "drizzle-kit generate",
     "check": "tsc --noEmit",
     "test:tools": "node tests/knowledge-tools.mjs",
-    "test:integration": "node tests/integration.mjs"
+    "test:integration": "node tests/integration.mjs",
+    "test:ui": "node tests/ui-fluent.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.7.0",
+    "@fluentui/react-icons": "2.0.343",
     "@hookform/resolvers": "^5.7.1",
     "@shadcn/react": "^0.3.0",
     "class-variance-authority": "0.7.1",
@@ -51,6 +53,7 @@
   "devDependencies": {
     "@cloudflare/vite-plugin": "1.37.1",
     "@cloudflare/workers-types": "4.20260515.1",
+    "@playwright/test": "1.63.0",
     "@tailwindcss/postcss": "4.2.1",
     "@types/node": "22.19.19",
     "@types/react": "19.2.14",
