@@ -4,8 +4,12 @@ Web 与 Electron 共用 React 工作台、编辑器、API 和 Radix 控件。评
 
 ## 规范来源
 
-设计前查阅了微软官方材料、动效文档和 Fluent UI v9 的 Button 实现；官方网站在云环境返回 403，因此通过对应官方 GitHub 仓库读取内容。
+设计和本次修订参考微软官方 Design Tokens、Fluent Motion、NavigationView / WinUI Gallery 示例、Fluent UI v9 Button 实现，以及 Electron 原生窗口与主题 API。
 
+- [Fluent 2 Design Tokens](https://fluent2.microsoft.design/design-tokens)
+- [Fluent 2 Motion](https://fluent2.microsoft.design/motion)
+- [Windows NavigationView 与 WinUI Gallery 示例](https://learn.microsoft.com/windows/apps/develop/ui/controls/navigationview)
+- [Electron nativeTheme](https://www.electronjs.org/docs/latest/api/native-theme)
 - [Windows Materials](https://learn.microsoft.com/windows/apps/design/signature-experiences/materials)；[官方 Markdown](https://github.com/MicrosoftDocs/windows-dev-docs/blob/docs/hub/apps/design/signature-experiences/materials.md)
 - [Windows Timing and easing](https://learn.microsoft.com/windows/apps/design/motion/timing-and-easing)；[官方 Markdown](https://github.com/MicrosoftDocs/windows-dev-docs/blob/docs/hub/apps/design/motion/timing-and-easing.md)
 - [Fluent UI v9 Button styles](https://github.com/microsoft/fluentui/blob/master/packages/react-components/react-button/library/src/components/Button/useButtonStyles.styles.ts)
@@ -45,3 +49,14 @@ CHROMIUM_PATH=/usr/bin/chromium pnpm test:ui
 `test:ui` 启动真实桌面本地服务和临时 SQLite，替代测试中的原生 IPC。测试账户登录、笔记保存、复习、各主要页面、主题与动效偏好、焦点恢复、请求竞态，以及 360–1380px 窗口和 100/125/150/200% 比例的逻辑视口/DPR 组合。截图保存到被忽略的 `outputs/fluent/`。
 
 浏览器验证不能替代 Windows 实机验收：原生 Mica、窗口按钮/Snap、多显示器 DPI 切换、系统凭据加密以及 EXE 安装仍应在 Windows 11 验证。当前未将 CSS 视口/DPR 模拟描述为 Windows 实机缩放测试。
+
+## v0.3.0 修订
+
+- 取消 document.startViewTransition 整页快照，保留 CSS 内容淡入，连续操作不会被快照层拦截。文本框只在内容或宽度变化时测量，不再每次按键重建 ResizeObserver。
+- Modal 统一使用固定标题和可滚动正文。网格列使用 minmax(0, …)，长文本换行；代码、公式、表格在自己的区域滚动，深层目录缩进最多占 84px。
+- FileIndex 使用一次构建的目录树、可见行分页（每页 100 项）和明确的加载状态。5000 文件树展开与分组有覆盖测试；UI 测试通过真实扫描的 230 个文件验证分页、分类、搜索和预览。
+- 本地 appearance.json 采用串行原子写入，启动先读取再应用主题；Web 仍使用 localStorage。原生材质根据高对比与减少透明度设置回退。
+- 大于 100,000 字符或未知语言的代码以完整纯文本展示，不执行自动语言探测；普通高亮通过 memo/useMemo 缓存。
+- 测试新增弹窗内部 scrollWidth 断言，避免正文已经在弹窗里溢出但整个页面宽度仍正常的漏检。
+
+Windows 发布流水线还会运行 UI 测试并保留截图；所有打包与安装检查通过后才公开 EXE、完整 ZIP、校验文件。原生 Mica/Snap/多显示器切换仍需 Windows 11 交互式人工验收。

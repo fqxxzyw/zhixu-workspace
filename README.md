@@ -4,7 +4,23 @@
 
 [在线网站](https://zhixu-learning.fqxxzyw.chatgpt.site) · [功能与架构](docs/architecture.md) · [开发与部署](docs/deployment.md) · [Windows 桌面版](docs/desktop.md)
 
-## 当前版本：Web MVP 与 Windows 桌面预览版
+## Windows v0.3.0 · Fluent 桌面预览版
+
+[下载安装器 EXE](https://github.com/fqxxzyw/zhixu-workspace/releases/download/v0.3.0-desktop-preview/Zhixu-Setup-0.3.0-x64.exe) · [完整程序 ZIP](https://github.com/fqxxzyw/zhixu-workspace/releases/download/v0.3.0-desktop-preview/Zhixu-0.3.0-win-x64.zip) · [Release 与校验文件](https://github.com/fqxxzyw/zhixu-workspace/releases/tag/v0.3.0-desktop-preview)
+
+Windows 11 风格的本地学习工作台：左侧知识导航、分层内容区、Settings 式设置卡片、浅色/深色/跟随系统、系统强调色和键盘焦点。Windows 11 22H2 及以上通过 Electron 原生接口使用 Mica；不支持时使用纯色，不以 CSS 模糊模拟系统材质。
+
+![浅色学习工作台](docs/images/fluent-workspace.png)
+
+![深色外观设置](docs/images/fluent-settings.png)
+
+以上为实际桌面渲染器的自动化测试截图（本地服务、示例测试账户），使用纯色回退；不代表 Windows 实机 Mica 截图。
+
+本次重点修复长标题、路径、历史正文和窄窗口控件溢出；弹窗标题固定、正文独立滚动。页面切换不再阻挡连续点击，索引列表每页 100 项，主题和动画设置在重启后保留。完整说明见 [v0.3.0 更新记录](desktop/RELEASE.md) 与 [Fluent 实现与验证](docs/fluent-ui.md)。
+
+ZIP 已包含运行时，解压整个目录后运行 `知序.exe`，无需安装 Node.js；数据仍保存在应用数据目录。安装器适合日常使用与升级，升级前建议备份已有数据。
+
+## 已有功能
 
 - 新用户从空知识库开始，首次登录有可跳过、可继续的使用引导。
 - 知识空间、用户自定义学科、嵌套目录、标签、相关知识链接和全文搜索。
@@ -32,7 +48,7 @@
 | 分类 | 数据库目录与标签 | 虚拟目录、学科和标签，与磁盘位置独立 |
 | 安装 | 浏览器访问 | Windows 安装器 EXE |
 
-桌面实现位于 `desktop/`，Windows Actions 验证后发布安装包。使用与构建说明见 [桌面版文档](docs/desktop.md)。
+桌面实现位于 `desktop/`，Windows Actions 验证后发布安装器、完整程序 ZIP 和 SHA-256 校验文件。使用与构建说明见 [桌面版文档](docs/desktop.md)。
 
 ## 使用边界
 

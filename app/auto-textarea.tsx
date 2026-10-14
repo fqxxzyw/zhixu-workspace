@@ -18,8 +18,8 @@ export const AutoTextarea = forwardRef<
           parseFloat(getComputedStyle(el).borderBottomWidth || "0"),
       ) + "px";
   };
+  useLayoutEffect(fit, [value]);
   useLayoutEffect(() => {
-    fit();
     const el = ref.current;
     if (!el) return;
     const observer = new ResizeObserver(() => {
@@ -32,7 +32,7 @@ export const AutoTextarea = forwardRef<
     observer.observe(el);
     document.fonts?.ready.then(fit);
     return () => observer.disconnect();
-  }, [value]);
+  }, []);
   return (
     <textarea
       {...props}

@@ -49,6 +49,28 @@ try {
       chooseDirectory: async () => null,
     };
   });
+  const indexDir = path.join(temp, "课程材料");
+  await fs.mkdir(indexDir);
+  await Promise.all(
+    Array.from({ length: 230 }, (_, i) =>
+      fs.writeFile(
+        path.join(
+          indexDir,
+          `lesson-${String(i).padStart(3, "0")}-` +
+            "很长的文件名称".repeat(5) +
+            ".txt",
+        ),
+        "LongUnbrokenToken_".repeat(200),
+      ),
+    ),
+  );
+  await context.exposeBinding("chooseTestDirectory", () => ({
+    grant: service.indexer.grantRootPath(indexDir),
+    path: indexDir,
+  }));
+  await context.addInitScript(() => {
+    window.zhixuDesktop.chooseDirectory = () => window.chooseTestDirectory();
+  });
   const page = await context.newPage();
   page.on("pageerror", (e) => errors.push(e.message));
   await page.goto(service.origin);
@@ -66,6 +88,19 @@ try {
     path: path.join(output, "01-empty-light.png"),
     fullPage: true,
   });
+  await page
+    .locator(".sidebar-footer")
+    .getByRole("button", { name: "设置", exact: true })
+    .click();
+  await page.getByRole("combobox", { name: "应用主题" }).click();
+  await page.getByRole("option", { name: "深色", exact: true }).click();
+  await capture(page, {
+    path: path.join(output, "00-settings-clean-dark.png"),
+    fullPage: true,
+  });
+  await page.getByRole("combobox", { name: "应用主题" }).click();
+  await page.getByRole("option", { name: "浅色", exact: true }).click();
+  await page.keyboard.press("Escape");
   const ids = await page.evaluate(async () => {
     async function api(action, data = {}, method = "POST") {
       const r = await fetch(
@@ -197,6 +232,26 @@ try {
     .evaluate((e) => e.scrollHeight <= e.clientHeight + 2);
   assert(titleFits, "Note title must wrap without clipping");
   await noOverflow("editor");
+  await page.getByRole("button", { name: "修改历史", exact: true }).click();
+  await page.locator(".revision-row").first().click();
+  await expect(page.locator(".revision-preview h2")).toBeVisible();
+  for (const width of [1380, 760, 480, 360]) {
+    await page.setViewportSize({ width, height: 800 });
+    assert(
+      await page
+        .locator(".modal-body")
+        .evaluate((e) => e.scrollWidth <= e.clientWidth + 2),
+      `History content overflow at ${width}`,
+    );
+    assert(
+      await page
+        .locator(".revision-preview")
+        .evaluate((e) => e.scrollWidth <= e.clientWidth + 2),
+      `History text overflow at ${width}`,
+    );
+  }
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 1380, height: 900 });
   await capture(page, {
     path: path.join(output, "03-editor-light.png"),
     fullPage: true,
@@ -272,6 +327,42 @@ try {
     fullPage: true,
   });
   await noOverflow("file index");
+  await page.getByRole("button", { name: "选择文件夹", exact: true }).click();
+  await expect(page.locator(".index-status")).toContainText("230 个文件", {
+    timeout: 15000,
+  });
+  await expect(page.locator(".index-file-row")).toHaveCount(100);
+  await page.getByRole("button", { name: "下一页", exact: true }).click();
+  await expect(page.locator(".index-pagination")).toContainText("第 2 / 3 页");
+  await page.getByRole("button", { name: "下一页", exact: true }).click();
+  await expect(page.locator(".index-file-row")).toHaveCount(30);
+  await page.locator(".index-file-row").first().click();
+  await expect(page.getByRole("dialog")).toBeVisible();
+  await page
+    .getByRole("textbox", { name: "学科 / 专题", exact: true })
+    .fill("机器学习");
+  await page.getByRole("button", { name: "保存分类", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await page
+    .getByRole("textbox", { name: "搜索本地索引", exact: true })
+    .fill("机器学习");
+  await expect(page.locator(".index-file-row")).toHaveCount(1);
+  await page.setViewportSize({ width: 760, height: 650 });
+  await noOverflow("file results narrow");
+  await page.locator(".index-file-row").first().click();
+  await expect(page.locator(".file-preview .code-view")).toBeVisible();
+  assert(
+    await page
+      .locator(".modal-body")
+      .evaluate((e) => e.scrollWidth <= e.clientWidth + 2),
+    "File preview must scroll locally",
+  );
+  await capture(page, {
+    path: path.join(output, "09-file-preview.png"),
+    fullPage: true,
+  });
+  await page.keyboard.press("Escape");
+  await page.setViewportSize({ width: 1380, height: 900 });
   await page.getByRole("button", { name: "学习工作台", exact: true }).click();
   // A delayed response may never override the last selected note.
   await page.route("**/api/workspace?**", async (route) => {
@@ -344,6 +435,15 @@ try {
       .getByRole("button", { name: "学习台", exact: true })
       .click();
     await noOverflow(`dashboard ${width}`);
+    if (width <= 650) {
+      const navBox = await page
+        .locator(".knowledge-sidebar.expanded")
+        .boundingBox();
+      assert(
+        navBox.height <= 360,
+        "Narrow navigation must leave room for content",
+      );
+    }
     await page
       .locator(".sidebar-nav")
       .getByRole("button", { name: "知识库", exact: true })
