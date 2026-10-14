@@ -1,12 +1,10 @@
 "use client";
-import { flushSync } from "react-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   createContext,
   useContext,
   useEffect,
   useState,
-  useRef,
   useSyncExternalStore,
   type ReactNode,
 } from "react";
@@ -15,6 +13,7 @@ type NativeAppearance = {
   accent: string | null;
   material: boolean;
   titlebar: boolean;
+  preferences?: { theme: Theme; reduce: boolean; systemAccent: boolean };
 };
 export type DesktopBridge = {
   chooseDirectory: () => Promise<{ grant: string; path: string } | null>;
@@ -22,6 +21,11 @@ export type DesktopBridge = {
   showDataDirectory: () => Promise<void>;
   getAppearance: () => Promise<NativeAppearance>;
   setTheme: (theme: Theme) => Promise<void>;
+  setPreferences?: (v: {
+    theme: Theme;
+    reduce: boolean;
+    systemAccent: boolean;
+  }) => Promise<void>;
   onAppearanceChanged: (
     callback: (appearance: NativeAppearance) => void,
   ) => () => void;
@@ -136,16 +140,27 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
     material: false,
     titlebar: false,
   });
+  const [nativeReady, setNativeReady] = useState(false);
   useEffect(() => {
     const bridge = window.zhixuDesktop;
     void bridge
       ?.getAppearance()
-      .then(setNative)
-      .catch(() => {});
+      .then((appearance) => {
+        const p = appearance.preferences;
+        if (p) {
+          writePreference("zhixu-theme", p.theme);
+          writePreference("zhixu-reduce", String(p.reduce));
+          writePreference("zhixu-system-accent", String(p.systemAccent));
+        }
+        setNative(appearance);
+      })
+      .catch(() => {})
+      .finally(() => setNativeReady(true));
+    if (!bridge) setNativeReady(true);
     return bridge?.onAppearanceChanged(setNative);
   }, []);
   useEffect(() => {
-    if (!initialized) return;
+    if (!initialized || !nativeReady) return;
     const isDark = theme === "dark" || (theme === "system" && dark);
     const el = document.documentElement;
     el.classList.toggle("dark", isDark);
@@ -167,7 +182,13 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
       );
     }
     void window.zhixuDesktop?.setTheme(theme).catch(() => {});
-  }, [theme, reduce, systemAccent, initialized, dark, native]);
+  }, [theme, reduce, systemAccent, initialized, nativeReady, dark, native]);
+  useEffect(() => {
+    if (nativeReady)
+      void window.zhixuDesktop
+        ?.setPreferences?.({ theme, reduce, systemAccent })
+        .catch(() => {});
+  }, [nativeReady, theme, reduce, systemAccent]);
   return (
     <Context.Provider
       value={{
@@ -186,24 +207,9 @@ export function AppearanceProvider({ children }: { children: ReactNode }) {
 }
 export const useAppearance = () => useContext(Context);
 
-/** Preserve the old and new page during navigation when the browser supports it. */
+/** Navigation must remain interruptible. CSS animates the entering content only;
+ * document snapshots captured the entire editor and blocked rapid clicks. */
 export function useFluentView(initial: string) {
   const [view, updateView] = useState(initial);
-  const transition = useRef<ViewTransition | null>(null);
-  function setView(next: string) {
-    transition.current?.skipTransition();
-    if (
-      typeof document.startViewTransition !== "function" ||
-      document.documentElement.dataset.reduce === "true" ||
-      matchMedia("(prefers-reduced-motion: reduce)").matches
-    ) {
-      updateView(next);
-      return;
-    }
-    transition.current = document.startViewTransition(() =>
-      flushSync(() => updateView(next)),
-    );
-    void transition.current.finished.catch(() => {});
-  }
-  return [view, setView] as const;
+  return [view, updateView] as const;
 }

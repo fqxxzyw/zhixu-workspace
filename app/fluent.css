@@ -1137,3 +1137,218 @@ html[data-reduce="true"]::view-transition-old(*),
 html[data-reduce="true"]::view-transition-new(*) {
   animation: none !important;
 }
+
+/* Workspace surfaces: one quiet navigation layer and an inset content layer. */
+:root {
+  --surface-workspace: #fafafa;
+  --text-caption: 12px;
+  --text-body: 14px;
+  --text-subtitle: 20px;
+  --text-title: 28px;
+}
+.dark {
+  --surface-workspace: #272727;
+}
+.workspace {
+  container: workspace / inline-size;
+}
+.workspace > main,
+.workspace > .error-banner + main {
+  background: var(--surface-workspace);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  min-height: calc(100dvh - 112px);
+}
+.learning-shell .workspace > main {
+  max-width: none;
+  margin-inline: 0 12px;
+}
+.global-header .brand-mark {
+  width: 26px;
+  height: 26px;
+  font-size: 18px;
+}
+.dashboard-heading,
+.page-heading {
+  margin-bottom: 24px;
+}
+.continue-card {
+  min-height: 208px;
+}
+.note-card h3 {
+  min-height: 42px;
+  -webkit-line-clamp: 2;
+}
+.continue-card h2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.review-number {
+  font-family: var(--font-sans);
+}
+.setting-row {
+  transition:
+    background-color var(--duration-control),
+    border-color var(--duration-control);
+}
+.setting-row:hover {
+  background: var(--secondary);
+  border-color: var(--input);
+}
+/* A grid child defaults to min-width:auto: local overflow can be invisible to a
+   document-scrollWidth test, especially inside a scrolling dialog. */
+.modal {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  gap: 20px;
+}
+.modal-heading {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.modal-heading [data-slot="dialog-description"] {
+  margin-top: 8px;
+}
+.modal-body {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+  padding: 2px 4px 4px 2px;
+}
+.modal-body > *,
+.history-layout > *,
+.replace-compare > *,
+.provider-card > *,
+.revision-row > div {
+  min-width: 0;
+}
+.history-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+}
+.revision-block,
+.revision-row span,
+.provider-card strong,
+.provider-card > span,
+.resource-block a,
+.source-resource a,
+figcaption,
+.note-text,
+.note-document blockquote,
+.comment-quote,
+.note-toc button {
+  overflow-wrap: anywhere;
+}
+.provider-card .row,
+.guide-footer,
+.ai-apply {
+  flex-wrap: wrap;
+}
+.provider-card .pill,
+.provider-card .text-btn {
+  flex-shrink: 0;
+}
+.code-top > .row,
+.playground-top > .row,
+.map-toolbar > .row {
+  flex-wrap: wrap;
+}
+.formula,
+.mermaid,
+.diff-view {
+  max-width: 100%;
+  overflow-x: auto;
+}
+[data-slot="table-cell"] {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  min-width: 96px;
+  max-width: 360px;
+}
+.search-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px;
+  color: var(--muted-foreground);
+}
+.search-result {
+  flex: 1;
+}
+.btn,
+.text-btn {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.sidebar-nav svg,
+.sidebar-footer svg,
+.spacebar svg,
+.header-actions svg,
+.quick-capture svg {
+  flex-shrink: 0;
+}
+.directory-trigger {
+  flex-shrink: 0;
+}
+/* Adapt to available content width, including an expanded navigation pane. */
+@container workspace (max-width: 720px) {
+  .note-top-actions {
+    width: 100%;
+    margin-left: 0;
+    gap: 8px;
+  }
+  .learning-controls {
+    gap: 8px;
+  }
+  .playground-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .global-header {
+    padding-inline: 20px;
+  }
+  .brand-en {
+    display: none;
+  }
+}
+@media (max-width: 650px) {
+  .learning-shell .workspace > main {
+    margin-right: 0;
+    border-radius: 0;
+    border-inline: 0;
+  }
+  .history-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .modal {
+    max-height: calc(100dvh - 24px);
+  }
+  .setting-control {
+    margin-left: 0;
+  }
+  .setting-control .choice {
+    width: 100%;
+  }
+  .setting-row:has(.choice) .setting-control {
+    flex-basis: 100%;
+  }
+  .setting-row:has([role="switch"]) {
+    flex-wrap: nowrap;
+  }
+  .setting-row:has([role="switch"]) .setting-copy {
+    flex-basis: auto;
+  }
+}
+/* Do not replay list animations during scanning or keep a snapshot over controls. */
+.index-file-row,
+.library-row {
+  animation: none;
+}
+.workspace main,
+.local-index {
+  view-transition-name: none;
+}
